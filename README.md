@@ -1,5 +1,7 @@
 # BinaryObject Generator
 
+**https://pic-man749.github.io/BinaryObjectGenerator/**
+
 [BinaryGFX](https://github.com/pic-man749/BinaryGFX) の `BinaryObject` で使用する `BinaryGFX::BinaryData` 形式のヘッダファイルを、ブラウザ上のGUIで作成・出力するツールです。
 
 ## 使い方

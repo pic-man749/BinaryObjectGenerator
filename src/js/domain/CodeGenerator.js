@@ -1,5 +1,5 @@
 /** バイトデータ出力の1行あたり最大バイト数 */
-const BYTES_PER_LINE = 16;
+const BYTES_PER_LINE = 8;
 
 /**
  * BinaryGFX::BinaryData 形式の .hpp ヘッダファイルコードを生成する。
