@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none';">
+  <title>BinaryObject Generator</title>
+  <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1 class="app-title">BinaryObject Generator</h1>
+    <p class="app-subtitle">BinaryGFX::BinaryData ヘッダファイル生成ツール</p>
+  </header>
+
+  <main class="app-main">
+    <!-- ツールバー -->
+    <section class="toolbar" aria-label="描画ツールバー">
+      <div class="toolbar-group">
+        <span class="toolbar-label">ツール</span>
+        <div class="tool-buttons" role="group" aria-label="描画ツール選択">
+          <button id="btn-pencil" class="tool-btn active" data-tool="pencil" title="ペンシル (P)" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            ペンシル
+          </button>
+          <button id="btn-fill" class="tool-btn" data-tool="fill" title="塗りつぶし (F)" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.56 8.94L7.62 0 6.21 1.41l2.38 2.38-5.15 5.15a1.49 1.49 0 0 0 0 2.12l5.5 5.5c.29.29.68.44 1.06.44s.77-.15 1.06-.44l5.5-5.5c.59-.58.59-1.53 0-2.12zM5.21 10L10 5.21 14.79 10H5.21zM19 11.5s-2 2.17-2 3.5c0 1.1.9 2 2 2s2-.9 2-2c0-1.33-2-3.5-2-3.5z"/><path d="M0 20h24v4H0z" opacity=".36"/></svg>
+            塗りつぶし
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-separator" aria-hidden="true"></div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">描画色</span>
+        <div class="color-buttons" role="group" aria-label="描画色選択">
+          <button id="btn-color-black" class="color-btn active" data-color="0" title="黒 (0)" aria-pressed="true">
+            <span class="color-swatch color-swatch--black" aria-hidden="true"></span>
+            黒 (0)
+          </button>
+          <button id="btn-color-white" class="color-btn" data-color="1" title="白 (1)" aria-pressed="false">
+            <span class="color-swatch color-swatch--white" aria-hidden="true"></span>
+            白 (1)
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-separator" aria-hidden="true"></div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">操作</span>
+        <div class="action-buttons">
+          <button id="btn-undo" class="action-btn" title="元に戻す (Ctrl+Z)" disabled aria-label="元に戻す">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+            Undo
+          </button>
+          <button id="btn-redo" class="action-btn" title="やり直す (Ctrl+Y)" disabled aria-label="やり直す">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+            Redo
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar-separator" aria-hidden="true"></div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">キャンバスサイズ</span>
+        <div class="canvas-size-inputs">
+          <label class="size-input-label">
+            W
+            <input id="input-width" class="size-input" type="number" min="1" max="256" value="128" aria-label="キャンバス幅">
+          </label>
+          <span class="size-separator" aria-hidden="true">×</span>
+          <label class="size-input-label">
+            H
+            <input id="input-height" class="size-input" type="number" min="1" max="256" value="64" aria-label="キャンバス高さ">
+          </label>
+          <button id="btn-apply-size" class="action-btn">適用</button>
+        </div>
+      </div>
+
+      <div class="toolbar-separator" aria-hidden="true"></div>
+
+      <div class="toolbar-group">
+        <span class="toolbar-label">リセット</span>
+        <div class="reset-buttons">
+          <button id="btn-reset-black" class="action-btn action-btn--danger" title="黒でリセット">黒でリセット</button>
+          <button id="btn-reset-white" class="action-btn action-btn--danger" title="白でリセット">白でリセット</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ワークエリア -->
+    <div class="work-area">
+      <!-- キャンバスエリア -->
+      <section class="canvas-section" aria-label="描画キャンバス">
+        <div class="canvas-container" id="canvas-container">
+          <canvas id="main-canvas" aria-label="ピクセル描画キャンバス"></canvas>
+        </div>
+        <div class="zoom-controls" aria-label="ズームコントロール">
+          <button id="btn-zoom-out" class="zoom-btn" title="縮小" aria-label="縮小">－</button>
+          <span id="zoom-label" class="zoom-label" aria-live="polite">4×</span>
+          <button id="btn-zoom-in" class="zoom-btn" title="拡大" aria-label="拡大">＋</button>
+        </div>
+      </section>
+
+      <!-- 出力パネル -->
+      <section class="output-panel" aria-label="コード出力パネル">
+        <div class="output-form">
+          <div class="form-group">
+            <label class="form-label" for="input-name">図形名称</label>
+            <input id="input-name" class="form-input" type="text" value="bitmap"
+                   placeholder="C++識別子（例: my_icon）"
+                   autocomplete="off" spellcheck="false">
+            <p id="name-error" class="form-error" role="alert" aria-live="polite"></p>
+          </div>
+          <button id="btn-generate" class="btn-primary">コードを生成</button>
+        </div>
+
+        <div class="output-code">
+          <div class="output-code-header">
+            <span class="output-code-title">生成コード</span>
+            <div class="output-code-actions">
+              <button id="btn-copy" class="btn-secondary" disabled>コピー</button>
+              <button id="btn-download" class="btn-secondary" disabled>．hppダウンロード</button>
+            </div>
+          </div>
+          <textarea id="output-textarea" class="code-textarea" readonly
+                    placeholder="「コードを生成」ボタンを押すとここに出力されます。"
+                    spellcheck="false" aria-label="生成されたC++コード"></textarea>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="src/js/main.js"></script>
+</body>
+</html>

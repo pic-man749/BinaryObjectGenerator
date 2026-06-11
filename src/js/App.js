@@ -1,0 +1,190 @@
+import { PixelBuffer }        from './domain/PixelBuffer.js';
+import { HistoryManager }     from './domain/HistoryManager.js';
+import { PencilTool }         from './domain/tools/PencilTool.js';
+import { FillTool }           from './domain/tools/FillTool.js';
+import { BinaryDataEncoder }  from './domain/BinaryDataEncoder.js';
+import { CodeGenerator }      from './domain/CodeGenerator.js';
+import { CanvasRenderer }     from './ui/CanvasRenderer.js';
+import { CanvasView }         from './ui/CanvasView.js';
+import { ToolbarView }        from './ui/ToolbarView.js';
+import { OutputView }         from './ui/OutputView.js';
+
+/** ピクセルサイズの選択肢（2 の冪乗） */
+const PIXEL_SIZE_STEPS = [1, 2, 4, 8, 16, 32];
+
+/**
+ * アプリケーション全体の状態を管理し、各コンポーネントを協調させる。
+ */
+export class App {
+  constructor() {
+    /** @type {PixelBuffer} */
+    this._buffer  = new PixelBuffer(128, 64, 0);
+    /** @type {HistoryManager} */
+    this._history = new HistoryManager(50);
+    /** @type {PencilTool} */
+    this._pencil  = new PencilTool();
+    /** @type {FillTool} */
+    this._fill    = new FillTool();
+    /** @type {BinaryDataEncoder} */
+    this._encoder = new BinaryDataEncoder();
+    /** @type {CodeGenerator} */
+    this._codegen = new CodeGenerator();
+
+    /** @type {'pencil'|'fill'} */
+    this._activeTool  = 'pencil';
+    /** @type {0|1} */
+    this._activeColor = 0;
+
+    /** @type {CanvasRenderer|null} */
+    this._renderer    = null;
+    /** @type {ToolbarView|null} */
+    this._toolbarView = null;
+  }
+
+  /** DOM が準備完了後に呼び出す初期化処理。 */
+  init() {
+    const canvasEl = document.getElementById('main-canvas');
+
+    this._renderer    = new CanvasRenderer(canvasEl);
+    this._toolbarView = new ToolbarView(this);
+    new OutputView(this);
+    new CanvasView(canvasEl, this, this._renderer);
+
+    const initialPixelSize = this._calcInitialPixelSize();
+    this._renderer.setPixelSize(initialPixelSize, this._buffer);
+    this._toolbarView.updateZoomLabel(initialPixelSize);
+    this._toolbarView.updateUndoRedo(false, false);
+  }
+
+  // ─── ポインタイベントハンドラ ───────────────────────────────────────
+
+  /** @param {number} col @param {number} row */
+  handlePointerDown(col, row) {
+    this._history.push(this._buffer);
+    if (this._activeTool === 'pencil') {
+      this._pencil.onPointerDown(this._buffer, col, row, this._activeColor);
+    } else {
+      this._fill.execute(this._buffer, col, row, this._activeColor);
+    }
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+  }
+
+  /** @param {number} col @param {number} row */
+  handlePointerMove(col, row) {
+    if (this._activeTool !== 'pencil') return;
+    this._pencil.onPointerMove(this._buffer, col, row, this._activeColor);
+    this._renderer.render(this._buffer);
+  }
+
+  handlePointerUp() {
+    this._pencil.onPointerUp();
+  }
+
+  // ─── ツール・カラー変更 ────────────────────────────────────────────
+
+  /** @param {'pencil'|'fill'} toolName */
+  handleToolChange(toolName) {
+    this._activeTool = toolName;
+  }
+
+  /** @param {0|1} color */
+  handleColorChange(color) {
+    this._activeColor = color;
+  }
+
+  // ─── Undo / Redo ──────────────────────────────────────────────────
+
+  handleUndo() {
+    if (!this._history.canUndo()) return;
+    this._history.pushRedo(this._buffer);
+    this._buffer = this._history.undo();
+    this._pencil.onPointerUp();
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+  }
+
+  handleRedo() {
+    if (!this._history.canRedo()) return;
+    const next = this._history.redo();
+    // redo スタックをクリアしない pushUndo で現在状態を undo スタックに保存する
+    this._history.pushUndo(this._buffer);
+    this._buffer = next;
+    this._pencil.onPointerUp();
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+  }
+
+  // ─── キャンバス操作 ────────────────────────────────────────────────
+
+  /**
+   * @param {number} width
+   * @param {number} height
+   */
+  handleCanvasResize(width, height) {
+    this._history.push(this._buffer);
+    this._buffer.resize(width, height, 0);
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+  }
+
+  /** @param {0|1} color */
+  handleCanvasReset(color) {
+    this._history.push(this._buffer);
+    this._buffer.clear(color);
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+  }
+
+  // ─── ズーム ────────────────────────────────────────────────────────
+
+  /** @param {number} delta +1 で拡大、-1 で縮小 */
+  handleZoomDelta(delta) {
+    const currentIdx = PIXEL_SIZE_STEPS.indexOf(this._renderer.pixelSize);
+    const nextIdx    = Math.max(0, Math.min(PIXEL_SIZE_STEPS.length - 1, currentIdx + delta));
+    const nextSize   = PIXEL_SIZE_STEPS[nextIdx];
+    if (nextSize === this._renderer.pixelSize) return;
+    this._renderer.setPixelSize(nextSize, this._buffer);
+    this._toolbarView.updateZoomLabel(nextSize);
+  }
+
+  // ─── コード生成 ─────────────────────────────────────────────────────
+
+  /**
+   * @param {string} name C++識別子（OutputView 側でバリデーション済み）
+   * @returns {string}
+   */
+  handleGenerate(name) {
+    const data = this._encoder.encode(this._buffer);
+    return this._codegen.generate(
+      name,
+      this._buffer.width,
+      this._buffer.height,
+      data,
+    );
+  }
+
+  // ─── 内部ユーティリティ ─────────────────────────────────────────────
+
+  _updateUndoRedoButtons() {
+    this._toolbarView.updateUndoRedo(
+      this._history.canUndo(),
+      this._history.canRedo(),
+    );
+  }
+
+  /**
+   * キャンバス表示領域に収まる初期ピクセルサイズを計算する。
+   * @returns {number}
+   */
+  _calcInitialPixelSize() {
+    const container = document.getElementById('canvas-container');
+    const padding   = 48;
+    const aw = (container?.clientWidth  ?? 600) - padding;
+    const ah = (container?.clientHeight ?? 400) - padding;
+    const maxPs = Math.floor(Math.min(aw / this._buffer.width, ah / this._buffer.height));
+    // 2 の冪乗に切り捨て
+    const step = PIXEL_SIZE_STEPS.slice().reverse().find(s => s <= maxPs);
+    return step ?? 1;
+  }
+}
