@@ -33,7 +33,7 @@ export class App {
     /** @type {'pencil'|'fill'} */
     this._activeTool  = 'pencil';
     /** @type {0|1} */
-    this._activeColor = 0;
+    this._activeColor = 1;
 
     /** @type {CanvasRenderer|null} */
     this._renderer    = null;
