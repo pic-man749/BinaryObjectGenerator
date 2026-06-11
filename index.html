@@ -36,11 +36,11 @@
       <div class="toolbar-group">
         <span class="toolbar-label">描画色</span>
         <div class="color-buttons" role="group" aria-label="描画色選択">
-          <button id="btn-color-black" class="color-btn active" data-color="0" title="黒 (0)" aria-pressed="true">
+          <button id="btn-color-black" class="color-btn" data-color="0" title="黒 (0)" aria-pressed="false">
             <span class="color-swatch color-swatch--black" aria-hidden="true"></span>
             黒 (0)
           </button>
-          <button id="btn-color-white" class="color-btn" data-color="1" title="白 (1)" aria-pressed="false">
+          <button id="btn-color-white" class="color-btn active" data-color="1" title="白 (1)" aria-pressed="true">
             <span class="color-swatch color-swatch--white" aria-hidden="true"></span>
             白 (1)
           </button>
@@ -100,11 +100,16 @@
           <canvas id="main-canvas" aria-label="ピクセル描画キャンバス"></canvas>
         </div>
         <div class="zoom-controls" aria-label="ズームコントロール">
-          <button id="btn-zoom-out" class="zoom-btn" title="縮小" aria-label="縮小">－</button>
+          <button id="btn-zoom-out" class="zoom-btn" title="縮小 (Ctrl+ホイール↓)" aria-label="縮小">－</button>
+          <input id="zoom-slider" class="zoom-slider" type="range" min="1" max="32" step="1" value="4"
+                 aria-label="ズーム倍率">
+          <button id="btn-zoom-in" class="zoom-btn" title="拡大 (Ctrl+ホイール↑)" aria-label="拡大">＋</button>
           <span id="zoom-label" class="zoom-label" aria-live="polite">4×</span>
-          <button id="btn-zoom-in" class="zoom-btn" title="拡大" aria-label="拡大">＋</button>
         </div>
       </section>
+
+      <!-- ペイン境界リサイザー -->
+      <div id="pane-resizer" class="pane-resizer" aria-hidden="true"></div>
 
       <!-- 出力パネル -->
       <section class="output-panel" aria-label="コード出力パネル">

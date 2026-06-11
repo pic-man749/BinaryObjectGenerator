@@ -1,5 +1,6 @@
 /**
  * キャンバス上のマウス・ホイールイベントを処理し、App へ委譲する。
+ * ホイールズームはキャンバスペイン（.canvas-section）全体で有効にする。
  */
 export class CanvasView {
   /**
@@ -8,31 +9,31 @@ export class CanvasView {
    * @param {import('./CanvasRenderer.js').CanvasRenderer} renderer
    */
   constructor(canvasEl, app, renderer) {
-    this._canvas   = canvasEl;
-    this._app      = app;
-    this._renderer = renderer;
-    this._drawing  = false;
+    this._canvas      = canvasEl;
+    this._app         = app;
+    this._renderer    = renderer;
+    this._drawing     = false;
+    // ホイールズームをキャンバスペイン全体に適用するためペイン要素を取得する
+    this._canvasPane  = canvasEl.closest('.canvas-section');
 
     this._onPointerDown  = this._onPointerDown.bind(this);
     this._onPointerMove  = this._onPointerMove.bind(this);
     this._onPointerUp    = this._onPointerUp.bind(this);
-    this._onPointerLeave = this._onPointerLeave.bind(this);
     this._onWheel        = this._onWheel.bind(this);
 
     this._canvas.addEventListener('pointerdown',  this._onPointerDown);
     this._canvas.addEventListener('pointermove',  this._onPointerMove);
     this._canvas.addEventListener('pointerup',    this._onPointerUp);
-    this._canvas.addEventListener('pointerleave', this._onPointerLeave);
-    this._canvas.addEventListener('wheel',        this._onWheel, { passive: false });
+    // ホイールリスナーはペイン全体に登録する
+    this._canvasPane.addEventListener('wheel', this._onWheel, { passive: false });
   }
 
   /** イベントリスナーを解除する。 */
   dispose() {
-    this._canvas.removeEventListener('pointerdown',  this._onPointerDown);
-    this._canvas.removeEventListener('pointermove',  this._onPointerMove);
-    this._canvas.removeEventListener('pointerup',    this._onPointerUp);
-    this._canvas.removeEventListener('pointerleave', this._onPointerLeave);
-    this._canvas.removeEventListener('wheel',        this._onWheel);
+    this._canvas.removeEventListener('pointerdown', this._onPointerDown);
+    this._canvas.removeEventListener('pointermove', this._onPointerMove);
+    this._canvas.removeEventListener('pointerup',   this._onPointerUp);
+    this._canvasPane.removeEventListener('wheel',   this._onWheel);
   }
 
   /** @param {PointerEvent} e */
@@ -58,11 +59,6 @@ export class CanvasView {
     if (!this._drawing) return;
     this._drawing = false;
     this._app.handlePointerUp();
-  }
-
-  /** @param {PointerEvent} e */
-  _onPointerLeave(e) {
-    // setPointerCapture 使用中はキャンバス外でも pointerup を受け取るため、ここでは何もしない
   }
 
   /** @param {WheelEvent} e */
