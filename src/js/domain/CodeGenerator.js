@@ -6,13 +6,14 @@ const BYTES_PER_LINE = 8;
  */
 export class CodeGenerator {
   /**
-   * @param {string}     name   C++識別子（バリデーション済みであること）
+   * @param {string}     name        C++識別子（バリデーション済みであること）
    * @param {number}     width
    * @param {number}     height
-   * @param {Uint8Array} data   BinaryDataEncoder が出力したバイト配列
+   * @param {Uint8Array} data        BinaryDataEncoder が出力したバイト配列
+   * @param {string}     lineEnding  改行コード（例: '\r\n', '\n'）
    * @returns {string}
    */
-  generate(name, width, height, data) {
+  generate(name, width, height, data, lineEnding = '\r\n') {
     const guardName = `BINARYGFX_BINARYOBJECT_${name.toUpperCase()}_HPP_`;
     const dataLines = this._formatDataArray(data);
 
@@ -35,7 +36,7 @@ export class CodeGenerator {
       ``,
       `#endif`,
       ``,
-    ].join('\n');
+    ].join(lineEnding);
   }
 
   /**

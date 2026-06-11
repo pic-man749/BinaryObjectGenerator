@@ -159,16 +159,18 @@ export class App {
   // ─── コード生成 ─────────────────────────────────────────────────────
 
   /**
-   * @param {string} name C++識別子（OutputView 側でバリデーション済み）
+   * @param {string} name       C++識別子（OutputView 側でバリデーション済み）
+   * @param {string} lineEnding 改行コード（'\r\n' または '\n'）
    * @returns {string}
    */
-  handleGenerate(name) {
+  handleGenerate(name, lineEnding) {
     const data = this._encoder.encode(this._buffer);
     return this._codegen.generate(
       name,
       this._buffer.width,
       this._buffer.height,
       data,
+      lineEnding,
     );
   }
 
