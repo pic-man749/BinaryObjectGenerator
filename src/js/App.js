@@ -9,8 +9,8 @@ import { CanvasView }         from './ui/CanvasView.js';
 import { ToolbarView }        from './ui/ToolbarView.js';
 import { OutputView }         from './ui/OutputView.js';
 
-/** ピクセルサイズの選択肢（2 の冪乗） */
-const PIXEL_SIZE_STEPS = [1, 2, 4, 8, 16, 32];
+const MIN_PIXEL_SIZE = 1;
+const MAX_PIXEL_SIZE = 32;
 
 /**
  * アプリケーション全体の状態を管理し、各コンポーネントを協調させる。
@@ -140,12 +140,20 @@ export class App {
 
   /** @param {number} delta +1 で拡大、-1 で縮小 */
   handleZoomDelta(delta) {
-    const currentIdx = PIXEL_SIZE_STEPS.indexOf(this._renderer.pixelSize);
-    const nextIdx    = Math.max(0, Math.min(PIXEL_SIZE_STEPS.length - 1, currentIdx + delta));
-    const nextSize   = PIXEL_SIZE_STEPS[nextIdx];
-    if (nextSize === this._renderer.pixelSize) return;
-    this._renderer.setPixelSize(nextSize, this._buffer);
-    this._toolbarView.updateZoomLabel(nextSize);
+    this._applyZoom(this._renderer.pixelSize + delta);
+  }
+
+  /** @param {number} pixelSize スライダーが指定するピクセルサイズ */
+  handleZoomByIndex(pixelSize) {
+    this._applyZoom(pixelSize);
+  }
+
+  /** @param {number} pixelSize 適用するピクセルサイズ */
+  _applyZoom(pixelSize) {
+    const clamped = Math.max(MIN_PIXEL_SIZE, Math.min(MAX_PIXEL_SIZE, pixelSize));
+    if (clamped === this._renderer.pixelSize) return;
+    this._renderer.setPixelSize(clamped, this._buffer);
+    this._toolbarView.updateZoomLabel(clamped);
   }
 
   // ─── コード生成 ─────────────────────────────────────────────────────
@@ -183,8 +191,6 @@ export class App {
     const aw = (container?.clientWidth  ?? 600) - padding;
     const ah = (container?.clientHeight ?? 400) - padding;
     const maxPs = Math.floor(Math.min(aw / this._buffer.width, ah / this._buffer.height));
-    // 2 の冪乗に切り捨て
-    const step = PIXEL_SIZE_STEPS.slice().reverse().find(s => s <= maxPs);
-    return step ?? 1;
+    return Math.max(MIN_PIXEL_SIZE, Math.min(MAX_PIXEL_SIZE, maxPs));
   }
 }

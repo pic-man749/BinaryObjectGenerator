@@ -21,6 +21,7 @@ export class ToolbarView {
     this._btnResetWhite = document.getElementById('btn-reset-white');
     this._btnZoomOut    = document.getElementById('btn-zoom-out');
     this._btnZoomIn     = document.getElementById('btn-zoom-in');
+    this._zoomSlider    = document.getElementById('zoom-slider');
 
     this._bindEvents();
     this._bindKeyboard();
@@ -49,6 +50,11 @@ export class ToolbarView {
 
     this._btnZoomOut.addEventListener('click', () => this._app.handleZoomDelta(-1));
     this._btnZoomIn.addEventListener('click',  () => this._app.handleZoomDelta(+1));
+
+    this._zoomSlider.addEventListener('input', () => {
+      const pixelSize = parseInt(this._zoomSlider.value, 10);
+      this._app.handleZoomByIndex(pixelSize);
+    });
   }
 
   _bindKeyboard() {
@@ -100,12 +106,13 @@ export class ToolbarView {
   }
 
   /**
-   * ズームラベルを更新する。
+   * ズームラベルとスライダーを更新する。
    * @param {number} pixelSize
    */
   updateZoomLabel(pixelSize) {
     const label = document.getElementById('zoom-label');
     if (label) label.textContent = `${pixelSize}×`;
+    this._zoomSlider.value = pixelSize;
   }
 
   /**

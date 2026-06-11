@@ -100,9 +100,11 @@
           <canvas id="main-canvas" aria-label="ピクセル描画キャンバス"></canvas>
         </div>
         <div class="zoom-controls" aria-label="ズームコントロール">
-          <button id="btn-zoom-out" class="zoom-btn" title="縮小" aria-label="縮小">－</button>
+          <button id="btn-zoom-out" class="zoom-btn" title="縮小 (Ctrl+ホイール↓)" aria-label="縮小">－</button>
+          <input id="zoom-slider" class="zoom-slider" type="range" min="1" max="32" step="1" value="4"
+                 aria-label="ズーム倍率">
+          <button id="btn-zoom-in" class="zoom-btn" title="拡大 (Ctrl+ホイール↑)" aria-label="拡大">＋</button>
           <span id="zoom-label" class="zoom-label" aria-live="polite">4×</span>
-          <button id="btn-zoom-in" class="zoom-btn" title="拡大" aria-label="拡大">＋</button>
         </div>
       </section>
 
