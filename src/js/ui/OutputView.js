@@ -11,12 +11,15 @@ export class OutputView {
   constructor(app) {
     this._app = app;
 
-    this._inputName   = document.getElementById('input-name');
-    this._nameError   = document.getElementById('name-error');
-    this._btnGenerate = document.getElementById('btn-generate');
-    this._textarea    = document.getElementById('output-textarea');
-    this._btnCopy     = document.getElementById('btn-copy');
-    this._btnDownload = document.getElementById('btn-download');
+    this._inputName        = document.getElementById('input-name');
+    this._nameError        = document.getElementById('name-error');
+    this._selectLineEnding = document.getElementById('select-line-ending');
+    this._btnGenerate      = document.getElementById('btn-generate');
+    this._textarea         = document.getElementById('output-textarea');
+    this._btnCopy          = document.getElementById('btn-copy');
+    this._btnDownload      = document.getElementById('btn-download');
+    // textarea は改行コードを正規化するため、生成コードを別途保持する
+    this._lastGeneratedCode = '';
 
     this._bindEvents();
     this._validateName();
@@ -47,19 +50,21 @@ export class OutputView {
 
   /** コードを生成してテキストエリアに表示する。 */
   _generate() {
-    const name = this._inputName.value;
+    const name       = this._inputName.value;
     if (!IDENTIFIER_PATTERN.test(name)) return;
 
-    const code = this._app.handleGenerate(name);
-    // XSS 対策: textContent を使用し、innerHTML への代入を行わない
-    this._textarea.value = code;
+    const lineEnding        = this._selectLineEnding.value === 'CRLF' ? '\r\n' : '\n';
+    const code              = this._app.handleGenerate(name, lineEnding);
+    // textarea は改行コードを正規化するため、元のコードを保持してからセットする
+    this._lastGeneratedCode = code;
+    this._textarea.value    = code;
     this._btnCopy.disabled     = false;
     this._btnDownload.disabled = false;
   }
 
   /** 生成コードをクリップボードにコピーする。 */
   async _copy() {
-    const code = this._textarea.value;
+    const code = this._lastGeneratedCode;
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
@@ -81,7 +86,7 @@ export class OutputView {
 
   /** 生成コードを .hpp ファイルとしてダウンロードする。 */
   _download() {
-    const code = this._textarea.value;
+    const code = this._lastGeneratedCode;
     if (!code) return;
 
     const name = this._inputName.value;
