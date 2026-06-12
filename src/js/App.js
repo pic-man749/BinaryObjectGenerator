@@ -4,6 +4,7 @@ import { PencilTool }         from './domain/tools/PencilTool.js';
 import { FillTool }           from './domain/tools/FillTool.js';
 import { BinaryDataEncoder }  from './domain/BinaryDataEncoder.js';
 import { CodeGenerator }      from './domain/CodeGenerator.js';
+import { HppParser }          from './domain/HppParser.js';
 import { StorageManager }     from './domain/StorageManager.js';
 import { CanvasRenderer }     from './ui/CanvasRenderer.js';
 import { CanvasView }         from './ui/CanvasView.js';
@@ -30,6 +31,8 @@ export class App {
     this._encoder = new BinaryDataEncoder();
     /** @type {CodeGenerator} */
     this._codegen = new CodeGenerator();
+    /** @type {HppParser} */
+    this._parser  = new HppParser();
 
     /** @type {'pencil'|'fill'} */
     this._activeTool  = 'pencil';
@@ -175,6 +178,32 @@ export class App {
     if (clamped === this._renderer.pixelSize) return;
     this._renderer.setPixelSize(clamped, this._buffer);
     this._toolbarView.updateZoomLabel(clamped);
+  }
+
+  // ─── ファイルロード ─────────────────────────────────────────────────
+
+  /**
+   * .hpp ファイルの文字列を解析してキャンバスに反映する。
+   * @param {string} source ファイル内容
+   * @returns {string|null} エラーメッセージ（成功時は null）
+   */
+  handleLoadHpp(source) {
+    let parsed;
+    try {
+      parsed = this._parser.parse(source);
+    } catch (err) {
+      return err.message;
+    }
+
+    this._history.push(this._buffer);
+    this._buffer = new PixelBuffer(parsed.width, parsed.height);
+    this._buffer.data = parsed.pixels;
+    this._toolbarView.updateCanvasSize(parsed.width, parsed.height);
+    this._outputView?.setName(parsed.name);
+    this._renderer.setPixelSize(this._renderer.pixelSize, this._buffer);
+    this._renderer.render(this._buffer);
+    this._updateUndoRedoButtons();
+    return null;
   }
 
   // ─── コード生成 ─────────────────────────────────────────────────────

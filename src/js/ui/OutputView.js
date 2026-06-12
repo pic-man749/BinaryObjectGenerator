@@ -18,6 +18,9 @@ export class OutputView {
     this._textarea         = document.getElementById('output-textarea');
     this._btnCopy          = document.getElementById('btn-copy');
     this._btnDownload      = document.getElementById('btn-download');
+    this._btnLoadHpp       = document.getElementById('btn-load-hpp');
+    this._inputFileHpp     = document.getElementById('input-file-hpp');
+    this._loadHppStatus    = document.getElementById('load-hpp-status');
     // textarea は改行コードを正規化するため、生成コードを別途保持する
     this._lastGeneratedCode = '';
 
@@ -30,6 +33,33 @@ export class OutputView {
     this._btnGenerate.addEventListener('click', () => this._generate());
     this._btnCopy.addEventListener('click',     () => this._copy());
     this._btnDownload.addEventListener('click', () => this._download());
+
+    // .hpp ファイル読み込みボタン → 非表示のファイル入力をトリガー
+    this._btnLoadHpp.addEventListener('click', () => {
+      this._inputFileHpp.value = '';
+      this._inputFileHpp.click();
+    });
+
+    // ファイル選択後に FileReader で読み込み、App に渡す
+    this._inputFileHpp.addEventListener('change', () => {
+      const file = this._inputFileHpp.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const source  = e.target.result;
+        const errMsg  = this._app.handleLoadHpp(source);
+        if (errMsg) {
+          this._setLoadStatus(errMsg, true);
+        } else {
+          this._setLoadStatus(`${file.name} を読み込みました。`);
+        }
+      };
+      reader.onerror = () => {
+        this._setLoadStatus('ファイルの読み込みに失敗しました。', true);
+      };
+      reader.readAsText(file, 'UTF-8');
+    });
   }
 
   /** 図形名称の入力をバリデーションし、UI に反映する。 */
@@ -113,6 +143,16 @@ export class OutputView {
   _clearError() {
     this._nameError.textContent = '';
     this._inputName.classList.remove('error');
+  }
+
+  /**
+   * .hpp 読み込みのステータスメッセージを表示する。
+   * @param {string}  message
+   * @param {boolean} isError
+   */
+  _setLoadStatus(message, isError = false) {
+    this._loadHppStatus.textContent = message;
+    this._loadHppStatus.classList.toggle('load-hpp-status--error', isError);
   }
 
   /** @returns {string} 現在入力されている図形名称 */
