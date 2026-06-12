@@ -4,6 +4,7 @@ import { PencilTool }         from './domain/tools/PencilTool.js';
 import { FillTool }           from './domain/tools/FillTool.js';
 import { BinaryDataEncoder }  from './domain/BinaryDataEncoder.js';
 import { CodeGenerator }      from './domain/CodeGenerator.js';
+import { StorageManager }     from './domain/StorageManager.js';
 import { CanvasRenderer }     from './ui/CanvasRenderer.js';
 import { CanvasView }         from './ui/CanvasView.js';
 import { ToolbarView }        from './ui/ToolbarView.js';
@@ -35,10 +36,16 @@ export class App {
     /** @type {0|1} */
     this._activeColor = 1;
 
+    /** @type {StorageManager} */
+    this._storage     = new StorageManager();
     /** @type {CanvasRenderer|null} */
     this._renderer    = null;
     /** @type {ToolbarView|null} */
     this._toolbarView = null;
+    /** @type {OutputView|null} */
+    this._outputView  = null;
+    /** @type {number|null} 自動保存デバウンス用タイマー */
+    this._saveTimer   = null;
   }
 
   /** DOM が準備完了後に呼び出す初期化処理。 */
@@ -47,8 +54,17 @@ export class App {
 
     this._renderer    = new CanvasRenderer(canvasEl);
     this._toolbarView = new ToolbarView(this);
-    new OutputView(this);
+    this._outputView  = new OutputView(this);
     new CanvasView(canvasEl, this, this._renderer);
+
+    // 保存済み状態を復元する
+    const saved = this._storage.load();
+    if (saved) {
+      this._buffer = new PixelBuffer(saved.width, saved.height);
+      this._buffer.data = saved.data;
+      this._toolbarView.updateCanvasSize(saved.width, saved.height);
+      this._outputView.setName(saved.name);
+    }
 
     const initialPixelSize = this._calcInitialPixelSize();
     this._renderer.setPixelSize(initialPixelSize, this._buffer);
@@ -79,6 +95,7 @@ export class App {
 
   handlePointerUp() {
     this._pencil.onPointerUp();
+    this._scheduleSave();
   }
 
   // ─── ツール・カラー変更 ────────────────────────────────────────────
@@ -102,6 +119,7 @@ export class App {
     this._pencil.onPointerUp();
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
+    this._scheduleSave();
   }
 
   handleRedo() {
@@ -113,6 +131,7 @@ export class App {
     this._pencil.onPointerUp();
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
+    this._scheduleSave();
   }
 
   // ─── キャンバス操作 ────────────────────────────────────────────────
@@ -126,6 +145,7 @@ export class App {
     this._buffer.resize(width, height, 0);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
+    this._scheduleSave();
   }
 
   /** @param {0|1} color */
@@ -134,6 +154,7 @@ export class App {
     this._buffer.clear(color);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
+    this._scheduleSave();
   }
 
   // ─── ズーム ────────────────────────────────────────────────────────
@@ -181,6 +202,19 @@ export class App {
       this._history.canUndo(),
       this._history.canRedo(),
     );
+  }
+
+  /**
+   * 500ms のデバウンスで localStorage へ保存する。
+   * ドラッグ中の過剰な書き込みを防ぐ。
+   */
+  _scheduleSave() {
+    if (this._saveTimer !== null) clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      const name = this._outputView?.getName() ?? 'bitmap';
+      this._storage.save(this._buffer, name);
+    }, 500);
   }
 
   /**

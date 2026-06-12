@@ -114,4 +114,18 @@ export class OutputView {
     this._nameError.textContent = '';
     this._inputName.classList.remove('error');
   }
+
+  /** @returns {string} 現在入力されている図形名称 */
+  getName() {
+    return this._inputName.value;
+  }
+
+  /**
+   * 図形名称を外部からセットする（保存済み状態の復元時に使用）。
+   * @param {string} name
+   */
+  setName(name) {
+    this._inputName.value = name;
+    this._validateName();
+  }
 }
