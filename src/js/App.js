@@ -73,6 +73,9 @@ export class App {
     this._renderer.setPixelSize(initialPixelSize, this._buffer);
     this._toolbarView.updateZoomLabel(initialPixelSize);
     this._toolbarView.updateUndoRedo(false, false);
+    if (saved) {
+      this._outputView.refreshCode();
+    }
   }
 
   // ─── ポインタイベントハンドラ ───────────────────────────────────────

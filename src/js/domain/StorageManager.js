@@ -44,9 +44,9 @@ export class StorageManager {
       if (!Number.isInteger(height) || height < 1 || height > 256) return null;
 
       const data = this._decode(payload.data);
-      if (data.length !== width * Math.ceil(height / 8)) return null;
+      if (data.length !== width * height) return null;
 
-      return { width, height, data: this._toPixelData(data, width, height), name: name || 'bitmap' };
+      return { width, height, data, name: name || 'bitmap' };
     } catch {
       return null;
     }
@@ -84,30 +84,4 @@ export class StorageManager {
     return bytes;
   }
 
-  /**
-   * BinaryData 形式のバイト配列を PixelBuffer 用の行優先ピクセルデータに変換する。
-   * （BinaryDataEncoder の逆変換）
-   * @param {Uint8Array} binaryData 列優先・LSB上端のバイト列
-   * @param {number}     width
-   * @param {number}     height
-   * @returns {Uint8Array} 行優先ピクセルデータ（値は 0 または 1）
-   */
-  _toPixelData(binaryData, width, height) {
-    const pagesPerCol = Math.ceil(height / 8);
-    const pixels      = new Uint8Array(width * height);
-
-    for (let col = 0; col < width; col++) {
-      for (let page = 0; page < pagesPerCol; page++) {
-        const byte = binaryData[col * pagesPerCol + page];
-        for (let bit = 0; bit < 8; bit++) {
-          const row = page * 8 + bit;
-          if (row < height) {
-            pixels[row * width + col] = (byte >> bit) & 1;
-          }
-        }
-      }
-    }
-
-    return pixels;
-  }
 }
