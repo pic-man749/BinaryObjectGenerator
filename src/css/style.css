@@ -568,6 +568,22 @@ input:focus-visible {
   min-height: 1.2em;
 }
 
+/* .hpp 読み込みエリア */
+.load-hpp-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.load-hpp-status {
+  font-size: var(--font-size-xs);
+  color: var(--color-success);
+}
+
+.load-hpp-status--error {
+  color: var(--color-error);
+}
+
 /* プライマリボタン */
 .btn-primary {
   width: 100%;

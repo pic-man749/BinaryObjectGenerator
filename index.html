@@ -115,6 +115,16 @@
       <section class="output-panel" aria-label="コード出力パネル">
         <div class="output-form">
           <div class="form-group">
+            <label class="form-label">.hpp ファイルを読み込む</label>
+            <div class="load-hpp-area">
+              <button id="btn-load-hpp" class="btn-secondary btn-load-hpp">
+                .hpp を開く
+              </button>
+              <span id="load-hpp-status" class="load-hpp-status" aria-live="polite"></span>
+            </div>
+            <input id="input-file-hpp" type="file" accept=".hpp,.h" hidden aria-hidden="true">
+          </div>
+          <div class="form-group">
             <label class="form-label" for="input-name">図形名称</label>
             <input id="input-name" class="form-input" type="text" value="bitmap"
                    placeholder="C++識別子（例: my_icon）"
@@ -130,6 +140,7 @@
           </div>
           <button id="btn-generate" class="btn-primary">コードを生成</button>
         </div>
+
 
         <div class="output-code">
           <div class="output-code-header">
