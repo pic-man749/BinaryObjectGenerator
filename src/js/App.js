@@ -99,6 +99,7 @@ export class App {
   handlePointerUp() {
     this._pencil.onPointerUp();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── ツール・カラー変更 ────────────────────────────────────────────
@@ -123,6 +124,7 @@ export class App {
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   handleRedo() {
@@ -135,6 +137,7 @@ export class App {
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── キャンバス操作 ────────────────────────────────────────────────
@@ -149,6 +152,7 @@ export class App {
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   /** @param {0|1} color */
@@ -158,6 +162,7 @@ export class App {
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── ズーム ────────────────────────────────────────────────────────
@@ -203,6 +208,7 @@ export class App {
     this._renderer.setPixelSize(this._renderer.pixelSize, this._buffer);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
+    this._outputView?.refreshCode();
     return null;
   }
 
