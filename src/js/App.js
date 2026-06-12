@@ -77,39 +77,29 @@ export class App {
 
   // ─── ポインタイベントハンドラ ───────────────────────────────────────
 
-  /**
-   * @param {number} col
-   * @param {number} row
-   * @param {number} button マウスボタン番号（0: 左, 2: 右）
-   */
-  handlePointerDown(col, row, button = 0) {
-    const color = button === 2 ? (1 - this._activeColor) : this._activeColor;
+  /** @param {number} col @param {number} row */
+  handlePointerDown(col, row) {
     this._history.push(this._buffer);
     if (this._activeTool === 'pencil') {
-      this._pencil.onPointerDown(this._buffer, col, row, color);
+      this._pencil.onPointerDown(this._buffer, col, row, this._activeColor);
     } else {
-      this._fill.execute(this._buffer, col, row, color);
+      this._fill.execute(this._buffer, col, row, this._activeColor);
     }
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
   }
 
-  /**
-   * @param {number} col
-   * @param {number} row
-   * @param {number} button マウスボタン番号（0: 左, 2: 右）
-   */
-  handlePointerMove(col, row, button = 0) {
+  /** @param {number} col @param {number} row */
+  handlePointerMove(col, row) {
     if (this._activeTool !== 'pencil') return;
-    const color = button === 2 ? (1 - this._activeColor) : this._activeColor;
-    this._pencil.onPointerMove(this._buffer, col, row, color);
+    this._pencil.onPointerMove(this._buffer, col, row, this._activeColor);
     this._renderer.render(this._buffer);
   }
 
   handlePointerUp() {
     this._pencil.onPointerUp();
-    this._outputView?.autoGenerate();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── ツール・カラー変更 ────────────────────────────────────────────
@@ -133,8 +123,8 @@ export class App {
     this._pencil.onPointerUp();
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
-    this._outputView?.autoGenerate();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   handleRedo() {
@@ -146,8 +136,8 @@ export class App {
     this._pencil.onPointerUp();
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
-    this._outputView?.autoGenerate();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── キャンバス操作 ────────────────────────────────────────────────
@@ -161,8 +151,8 @@ export class App {
     this._buffer.resize(width, height, 0);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
-    this._outputView?.autoGenerate();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   /** @param {0|1} color */
@@ -171,8 +161,8 @@ export class App {
     this._buffer.clear(color);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
-    this._outputView?.autoGenerate();
     this._scheduleSave();
+    this._outputView?.refreshCode();
   }
 
   // ─── ズーム ────────────────────────────────────────────────────────
@@ -218,8 +208,7 @@ export class App {
     this._renderer.setPixelSize(this._renderer.pixelSize, this._buffer);
     this._renderer.render(this._buffer);
     this._updateUndoRedoButtons();
-    this._outputView?.autoGenerate();
-    this._scheduleSave();
+    this._outputView?.refreshCode();
     return null;
   }
 

@@ -28,10 +28,13 @@ export class OutputView {
   }
 
   _bindEvents() {
-    this._inputName.addEventListener('input',        () => { this._validateName(); this._generate(); });
+    this._inputName.addEventListener('input', () => {
+      this._validateName();
+      this._generate();
+    });
     this._selectLineEnding.addEventListener('change', () => this._generate());
-    this._btnCopy.addEventListener('click',           () => this._copy());
-    this._btnDownload.addEventListener('click',       () => this._download());
+    this._btnCopy.addEventListener('click',     () => this._copy());
+    this._btnDownload.addEventListener('click', () => this._download());
 
     // .hpp ファイル読み込みボタン → 非表示のファイル入力をトリガー
     this._btnLoadHpp.addEventListener('click', () => {
@@ -73,11 +76,9 @@ export class OutputView {
     } else {
       this._clearError();
     }
-
-    this._btnGenerate.disabled = !valid || !value;
   }
 
-  /** コードを生成してテキストエリアに表示する。バリデーション失敗時は何もしない。 */
+  /** コードを生成してテキストエリアに表示する。名称が無効な場合は何もしない。 */
   _generate() {
     const name = this._inputName.value;
     if (!IDENTIFIER_PATTERN.test(name)) return;
@@ -91,8 +92,11 @@ export class OutputView {
     this._btnDownload.disabled = false;
   }
 
-  /** キャンバス変更時に App から呼び出す自動生成エントリーポイント。 */
-  autoGenerate() {
+  /**
+   * 外部から呼び出してコードを再生成する（描画完了時などに使用）。
+   * 名称バリデーションが通らない場合は何もしない。
+   */
+  refreshCode() {
     this._generate();
   }
 
