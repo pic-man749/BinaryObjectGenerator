@@ -13,7 +13,6 @@ export class CanvasView {
     this._app         = app;
     this._renderer    = renderer;
     this._drawing     = false;
-    this._button      = 0;
     // ホイールズームをキャンバスペイン全体に適用するためペイン要素を取得する
     this._canvasPane  = canvasEl.closest('.canvas-section');
 
@@ -27,8 +26,6 @@ export class CanvasView {
     this._canvas.addEventListener('pointerup',    this._onPointerUp);
     // ホイールリスナーはペイン全体に登録する
     this._canvasPane.addEventListener('wheel', this._onWheel, { passive: false });
-    // 右クリックメニューを抑制する
-    this._canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   /** イベントリスナーを解除する。 */
@@ -41,15 +38,12 @@ export class CanvasView {
 
   /** @param {PointerEvent} e */
   _onPointerDown(e) {
-    // 左クリック（0）と右クリック（2）のみ処理する
-    if (e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
     // ドラッグ中にキャンバス外へカーソルが出ても描画を継続するためにキャプチャする
     this._canvas.setPointerCapture(e.pointerId);
     this._drawing = true;
-    this._button  = e.button;
     const { col, row } = this._toPixelCoords(e);
-    this._app.handlePointerDown(col, row, e.button);
+    this._app.handlePointerDown(col, row);
   }
 
   /** @param {PointerEvent} e */
@@ -57,7 +51,7 @@ export class CanvasView {
     if (!this._drawing) return;
     e.preventDefault();
     const { col, row } = this._toPixelCoords(e);
-    this._app.handlePointerMove(col, row, this._button);
+    this._app.handlePointerMove(col, row);
   }
 
   /** @param {PointerEvent} e */

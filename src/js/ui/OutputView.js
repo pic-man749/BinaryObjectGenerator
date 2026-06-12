@@ -14,6 +14,7 @@ export class OutputView {
     this._inputName        = document.getElementById('input-name');
     this._nameError        = document.getElementById('name-error');
     this._selectLineEnding = document.getElementById('select-line-ending');
+    this._btnGenerate      = document.getElementById('btn-generate');
     this._textarea         = document.getElementById('output-textarea');
     this._btnCopy          = document.getElementById('btn-copy');
     this._btnDownload      = document.getElementById('btn-download');
@@ -28,10 +29,10 @@ export class OutputView {
   }
 
   _bindEvents() {
-    this._inputName.addEventListener('input',        () => { this._validateName(); this._generate(); });
-    this._selectLineEnding.addEventListener('change', () => this._generate());
-    this._btnCopy.addEventListener('click',           () => this._copy());
-    this._btnDownload.addEventListener('click',       () => this._download());
+    this._inputName.addEventListener('input',  () => this._validateName());
+    this._btnGenerate.addEventListener('click', () => this._generate());
+    this._btnCopy.addEventListener('click',     () => this._copy());
+    this._btnDownload.addEventListener('click', () => this._download());
 
     // .hpp ファイル読み込みボタン → 非表示のファイル入力をトリガー
     this._btnLoadHpp.addEventListener('click', () => {
@@ -77,9 +78,9 @@ export class OutputView {
     this._btnGenerate.disabled = !valid || !value;
   }
 
-  /** コードを生成してテキストエリアに表示する。バリデーション失敗時は何もしない。 */
+  /** コードを生成してテキストエリアに表示する。 */
   _generate() {
-    const name = this._inputName.value;
+    const name       = this._inputName.value;
     if (!IDENTIFIER_PATTERN.test(name)) return;
 
     const lineEnding        = this._selectLineEnding.value === 'CRLF' ? '\r\n' : '\n';
@@ -89,11 +90,6 @@ export class OutputView {
     this._textarea.value    = code;
     this._btnCopy.disabled     = false;
     this._btnDownload.disabled = false;
-  }
-
-  /** キャンバス変更時に App から呼び出す自動生成エントリーポイント。 */
-  autoGenerate() {
-    this._generate();
   }
 
   /** 生成コードをクリップボードにコピーする。 */
