@@ -1,5 +1,7 @@
 /** C++識別子の正規表現 */
 const IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+/** インクルードパスのデフォルト値 */
+const DEFAULT_INCLUDE_PATH = 'BinaryGFX/Core/Binary/BinaryData.hpp';
 
 /**
  * 出力パネルの UI イベントを処理する。
@@ -11,25 +13,40 @@ export class OutputView {
   constructor(app) {
     this._app = app;
 
-    this._inputName        = document.getElementById('input-name');
-    this._nameError        = document.getElementById('name-error');
-    this._selectLineEnding = document.getElementById('select-line-ending');
-    this._textarea         = document.getElementById('output-textarea');
-    this._btnCopy          = document.getElementById('btn-copy');
-    this._btnDownload      = document.getElementById('btn-download');
-    this._btnLoadHpp       = document.getElementById('btn-load-hpp');
-    this._inputFileHpp     = document.getElementById('input-file-hpp');
-    this._loadHppStatus    = document.getElementById('load-hpp-status');
+    this._inputName           = document.getElementById('input-name');
+    this._nameError           = document.getElementById('name-error');
+    this._inputIncludePath    = document.getElementById('input-include-path');
+    this._includePathError    = document.getElementById('include-path-error');
+    this._btnResetIncludePath = document.getElementById('btn-reset-include-path');
+    this._selectLineEnding    = document.getElementById('select-line-ending');
+    this._textarea            = document.getElementById('output-textarea');
+    this._btnCopy             = document.getElementById('btn-copy');
+    this._btnDownload         = document.getElementById('btn-download');
+    this._btnLoadHpp          = document.getElementById('btn-load-hpp');
+    this._inputFileHpp        = document.getElementById('input-file-hpp');
+    this._loadHppStatus       = document.getElementById('load-hpp-status');
     // textarea は改行コードを正規化するため、生成コードを別途保持する
     this._lastGeneratedCode = '';
 
     this._bindEvents();
     this._validateName();
+    this._validateIncludePath();
   }
 
   _bindEvents() {
     this._inputName.addEventListener('input', () => {
       this._validateName();
+      this._generate();
+    });
+    this._inputIncludePath.addEventListener('input', () => {
+      this._validateIncludePath();
+      this._app.handleIncludePathChange(this._inputIncludePath.value);
+      this._generate();
+    });
+    this._btnResetIncludePath.addEventListener('click', () => {
+      this._inputIncludePath.value = DEFAULT_INCLUDE_PATH;
+      this._validateIncludePath();
+      this._app.handleIncludePathChange(DEFAULT_INCLUDE_PATH);
       this._generate();
     });
     this._selectLineEnding.addEventListener('change', () => this._generate());
@@ -78,10 +95,22 @@ export class OutputView {
     }
   }
 
-  /** コードを生成してテキストエリアに表示する。名称が無効な場合は何もしない。 */
+  /** インクルードパスの入力をバリデーションし、UI に反映する。 */
+  _validateIncludePath() {
+    if (!this._inputIncludePath.value) {
+      this._includePathError.textContent = 'インクルードパスを入力してください。';
+      this._inputIncludePath.classList.add('error');
+    } else {
+      this._includePathError.textContent = '';
+      this._inputIncludePath.classList.remove('error');
+    }
+  }
+
+  /** コードを生成してテキストエリアに表示する。名称またはインクルードパスが無効な場合は何もしない。 */
   _generate() {
     const name = this._inputName.value;
     if (!IDENTIFIER_PATTERN.test(name)) return;
+    if (!this._inputIncludePath.value) return;
 
     const lineEnding        = this._selectLineEnding.value === 'CRLF' ? '\r\n' : '\n';
     const code              = this._app.handleGenerate(name, lineEnding);
@@ -175,5 +204,19 @@ export class OutputView {
   setName(name) {
     this._inputName.value = name;
     this._validateName();
+  }
+
+  /** @returns {string} 現在入力されているインクルードパス */
+  getIncludePath() {
+    return this._inputIncludePath.value;
+  }
+
+  /**
+   * インクルードパスを外部からセットする（保存済み状態の復元時に使用）。
+   * @param {string} path
+   */
+  setIncludePath(path) {
+    this._inputIncludePath.value = path;
+    this._validateIncludePath();
   }
 }

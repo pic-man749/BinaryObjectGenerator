@@ -1,5 +1,9 @@
-/** localStorage のキー */
+/** localStorage のキー（キャンバス状態） */
 const STORAGE_KEY = 'binaryObjectGenerator.state';
+/** localStorage のキー（インクルードパス） */
+const INCLUDE_PATH_KEY = 'binaryObjectGenerator.includePath';
+/** インクルードパスのデフォルト値 */
+export const DEFAULT_INCLUDE_PATH = 'BinaryGFX/Core/Binary/BinaryData.hpp';
 /** 保存データのバージョン */
 const SCHEMA_VERSION = 1;
 
@@ -10,9 +14,10 @@ export class StorageManager {
   /**
    * 現在の状態を localStorage に保存する。
    * @param {import('./PixelBuffer.js').PixelBuffer} buffer
-   * @param {string} name 図形名称
+   * @param {string} name        図形名称
+   * @param {string} includePath インクルードパス
    */
-  save(buffer, name) {
+  save(buffer, name, includePath) {
     try {
       const payload = {
         version: SCHEMA_VERSION,
@@ -22,6 +27,7 @@ export class StorageManager {
         name,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(INCLUDE_PATH_KEY, includePath);
     } catch {
       // localStorage が利用できない環境（プライベートブラウジング等）では無視する
     }
@@ -29,7 +35,7 @@ export class StorageManager {
 
   /**
    * localStorage から保存済みの状態を読み込む。
-   * @returns {{ width: number, height: number, data: Uint8Array, name: string }|null}
+   * @returns {{ width: number, height: number, data: Uint8Array, name: string, includePath: string }|null}
    */
   load() {
     try {
@@ -46,9 +52,23 @@ export class StorageManager {
       const data = this._decode(payload.data);
       if (data.length !== width * height) return null;
 
-      return { width, height, data, name: name || 'bitmap' };
+      const includePath = this.loadIncludePath();
+      return { width, height, data, name: name || 'bitmap', includePath };
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * localStorage からインクルードパスを読み込む。
+   * 保存されていない場合はデフォルト値を返す。
+   * @returns {string}
+   */
+  loadIncludePath() {
+    try {
+      return localStorage.getItem(INCLUDE_PATH_KEY) ?? DEFAULT_INCLUDE_PATH;
+    } catch {
+      return DEFAULT_INCLUDE_PATH;
     }
   }
 
