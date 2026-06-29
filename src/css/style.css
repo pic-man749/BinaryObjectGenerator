@@ -595,6 +595,22 @@ input:focus-visible {
   min-height: 1.2em;
 }
 
+/* インクルードパス入力エリア */
+.include-path-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.include-path-area .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-reset-include-path {
+  flex-shrink: 0;
+}
+
 /* .hpp 読み込みエリア */
 .load-hpp-area {
   display: flex;

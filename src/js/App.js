@@ -5,7 +5,7 @@ import { FillTool }           from './domain/tools/FillTool.js';
 import { BinaryDataEncoder }  from './domain/BinaryDataEncoder.js';
 import { CodeGenerator }      from './domain/CodeGenerator.js';
 import { HppParser }          from './domain/HppParser.js';
-import { StorageManager }     from './domain/StorageManager.js';
+import { StorageManager,DEFAULT_INCLUDE_PATH } from './domain/StorageManager.js';
 import { CanvasRenderer }     from './ui/CanvasRenderer.js';
 import { CanvasView }         from './ui/CanvasView.js';
 import { ToolbarView }        from './ui/ToolbarView.js';
@@ -38,6 +38,8 @@ export class App {
     this._activeTool  = 'pencil';
     /** @type {0|1} */
     this._activeColor = 1;
+    /** @type {string} */
+    this._includePath = DEFAULT_INCLUDE_PATH;
 
     /** @type {StorageManager} */
     this._storage     = new StorageManager();
@@ -67,6 +69,13 @@ export class App {
       this._buffer.data = saved.data;
       this._toolbarView.updateCanvasSize(saved.width, saved.height);
       this._outputView.setName(saved.name);
+      this._includePath = saved.includePath;
+      this._outputView.setIncludePath(saved.includePath);
+    } else {
+      // キャンバス状態がなくてもインクルードパスは独立して保存されている可能性がある
+      const savedPath = this._storage.loadIncludePath();
+      this._includePath = savedPath;
+      this._outputView.setIncludePath(savedPath);
     }
 
     const initialPixelSize = this._calcInitialPixelSize();
@@ -229,8 +238,18 @@ export class App {
       this._buffer.width,
       this._buffer.height,
       data,
+      this._includePath,
       lineEnding,
     );
+  }
+
+  /**
+   * インクルードパスが変更されたときに呼び出す。
+   * @param {string} path
+   */
+  handleIncludePathChange(path) {
+    this._includePath = path;
+    this._scheduleSave();
   }
 
   // ─── 内部ユーティリティ ─────────────────────────────────────────────
@@ -251,7 +270,7 @@ export class App {
     this._saveTimer = setTimeout(() => {
       this._saveTimer = null;
       const name = this._outputView?.getName() ?? 'bitmap';
-      this._storage.save(this._buffer, name);
+      this._storage.save(this._buffer, name, this._includePath);
     }, 500);
   }
 

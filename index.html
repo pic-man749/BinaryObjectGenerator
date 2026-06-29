@@ -141,6 +141,18 @@
             <p id="name-error" class="form-error" role="alert" aria-live="polite"></p>
           </div>
           <div class="form-group">
+            <label class="form-label" for="input-include-path">BinaryGFXインクルードパス</label>
+            <div class="include-path-area">
+              <input id="input-include-path" class="form-input" type="text"
+                     value="BinaryGFX/Core/Binary/BinaryData.hpp"
+                     autocomplete="off" spellcheck="false">
+              <button id="btn-reset-include-path" class="btn-secondary btn-reset-include-path" title="初期値に戻す">
+                リセット
+              </button>
+            </div>
+            <p id="include-path-error" class="form-error" role="alert" aria-live="polite"></p>
+          </div>
+          <div class="form-group">
             <label class="form-label" for="select-line-ending">改行コード</label>
             <select id="select-line-ending" class="form-select">
               <option value="CRLF" selected>CRLF (&#x5C;r&#x5C;n) — Windows</option>
